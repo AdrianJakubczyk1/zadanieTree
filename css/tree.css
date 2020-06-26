@@ -1,0 +1,22 @@
+#treeview {
+    margin-top: 5vh;
+    position: absolute;
+    margin-left: 5rem;
+}
+
+#treeview li {
+    min-width: 30rem;
+}
+
+#hidden-input {
+    visibility: hidden;
+}
+
+.alert-danger,
+.alert-success {
+    width: 100%;
+    text-align: center;
+    padding-top: 1vh;
+    padding-bottom: 1vh;
+    visibility: hidden;
+}

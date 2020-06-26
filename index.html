@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tree</title>
+    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Required Javascript -->
+    <script src="js/jquery-3.5.1.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-treeview/1.2.0/bootstrap-treeview.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-treeview/1.2.0/bootstrap-treeview.min.css" />
+    <link rel="stylesheet" href="css/tree.css">
+</head>
+
+<body>
+    <div class="container">
+
+        <h2 align="center">Tree</h2>
+
+        <div class="row">
+
+            <div class="col-md-6">
+                <h3 align="center"><u>Add new Category</u></h3>
+
+                <!-- add node select -->
+                <div class="form-group">
+                    <label for="parent category">Select parent category</label>
+                    <select name="parent_category" id="parent_category" class="form-control">
+
+                    </select>
+
+                </div>
+                <!-- end of select parent -->
+                <span id="added" class="alert-danger">the name is already taken</span>
+                <div class="form-group">
+                    <label for="Category name">Enter Category name</label>
+                    <input type="text" class="form-control" name="name" id="node_to_add_name" placeholder="CATEGORY NAME">
+                </div>
+                <!-- end of give category a name -->
+
+                <div class="form-group">
+                    <button id="addNode" class="btn btn-info">Add</button>
+
+                </div>
+                <!-- end of submit button -->
+
+
+            </div>
+            <!-- end of form -->
+
+            <div class="col-md-6">
+                <!-- container for tree -->
+                <div id="treeview"></div>
+
+            </div>
+
+        </div>
+        <!-- end of row -->
+
+        <!-- row with update delete -->
+        <div class="row">
+            <div class="col-md-6">
+                <h3 align="center"><u>Delete node</u></h3>
+
+                <div class="form-group">
+                    <label for="parent category">Select node to Delete</label>
+                    <select name="category_to_delete" id="category_to_delete" class="form-control">
+
+                    </select>
+
+                </div>
+                <!-- end of select parent -->
+                <div class="form-group">
+                    <button type="submit" id="deleteNode" class="btn btn-danger">DELETE</button>
+                </div>
+                <!-- end of button -->
+
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <h3 align="center"><u>Move category to</u></h3>
+
+                <div class="form-group">
+                    <label for="parent category">Select category to move</label>
+                    <select id="category_to_move" class="form-control">
+
+                        </select>
+                </div>
+                <div class="form-group">
+                    <label for="parent category">Select detination</label>
+                    <select id="destination" class="form-control">
+                        
+                    </select>
+                    <span id="moved" class="alert-success">the category has been moved!</span>
+                </div>
+                <!-- end of select parent -->
+                <div class="form-group">
+                    <button type="submit" id="moveCategory" class="btn btn-warning">Move Category</button>
+                </div>
+                <!-- end of submit button -->
+
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <h3 align="center"><u>change order</u></h3>
+                <div class="form-group">
+                    <label for="parent category">Select if you want to move the category up or down</label>
+                    <select id="direction" class="form-control">
+                        </select>
+                    <div class="form-group">
+                        <label for="parent category">Select category to change order</label>
+                        <select id="category_to_change_order" class="form-control">
+
+                        </select>
+                    </div>
+                    <div class="form-group" id="hidden-input">
+                        <label for="parent category">Select category to which chosen category should be moved</label>
+                        <select id="to_which_category" class="form-control">
+
+                        </select>
+                    </div>
+                    <span id="changed_order" class="alert-success">the category has changed order!</span>
+                </div>
+                <!-- end of select parent -->
+                <div class="form-group">
+                    <button type="submit" id="changeOrder" class="btn btn-primary">Change Order</button>
+                </div>
+
+                <!-- end of submit button -->
+
+            </div>
+        </div>
+
+
+    </div>
+    <!-- end of container -->
+    <script src="nodes.js"></script>
+    <script src="Tree.js"></script>
+
+</body>
+
+
+</html>
+<script>
+    $(document).ready(function() {
+
+        //used variables declarations
+        tree = new Tree();
+
+        displayTree();
+        fillSelects();
+        let deleteNode = document.getElementById('deleteNode');
+        let moveCategory = document.getElementById('moveCategory')
+        let add = document.getElementById('addNode');
+        let changeOrder = document.getElementById('changeOrder');
+        let moveSelect = document.getElementById('category_to_move')
+        let directionSelect = document.getElementById('direction');
+        let categoryToChangeOrder = document.getElementById('category_to_change_order');
+        var toWhich = document.getElementById('to_which_category');
+        ///////////// end of variables
+
+
+        ////////// Events section
+        categoryToChangeOrder.addEventListener("change", function(e) {
+            let optionSelected = $("option:selected", this);
+            let value = this.value;
+            let childs = tree.getChilds(value);
+            $('#to_which_category').empty();
+            let optionDown = document.createElement('option');
+            optionDown.appendChild(document.createTextNode('choose to which category the chosen category should move down'));
+            optionDown.value = -1;
+            toWhich.appendChild(optionDown);
+            for (let child of childs) {
+                let optionWhich = document.createElement('option');
+                optionWhich.appendChild(document.createTextNode(child.getName()));
+                optionWhich.value = child.getID();
+                toWhich.appendChild(optionWhich);
+            }
+        });
+
+        directionSelect.addEventListener('change', function(e) {
+            let categoryToMoveDown = document.getElementById('hidden-input');
+            let optionSelected = $("option:selected", this);
+            let value = this.value;
+            if (value === "down") {
+                categoryToMoveDown.style.visibility = "visible";
+            } else
+                categoryToMoveDown.style.visibility = "hidden";
+
+
+        });
+
+
+        moveSelect.addEventListener("change", function(e) {
+
+            let destination = document.getElementById('destination');
+            $('#destination').empty();
+            let optionSelected = $("option:selected", this)
+            let categorySelected = this.value;
+            let branch = tree.findTheBranchOfSelected(categorySelected);
+
+            let filtered = updateSelect(branch);
+
+            let optionDestination = document.createElement('option');
+            optionDestination.appendChild(document.createTextNode('where do you want to move chosen category'));
+            optionDestination.value = -1;
+            destination.appendChild(optionDestination);
+
+            for (let node of filtered) {
+                let option = document.createElement('option');
+                option.appendChild(document.createTextNode(node.getName()));
+                option.value = node.getID();
+                destination.appendChild(option);
+            }
+        });
+
+        changeOrder.addEventListener("click", () => {
+            changeOrderOfBranch();
+            clearSelects();
+            fillSelects();
+            displayTree();
+            setSelects();
+        })
+
+
+        moveCategory.addEventListener("click", () => {
+            moveCategoryTo();
+            displayTree();
+            setSelects();
+        });
+
+        add.addEventListener("click", () => {
+            addNode();
+            clearSelects();
+            fillSelects();
+            displayTree();
+            setSelects();
+        });
+
+
+
+        deleteNode.addEventListener('click', () => {
+            resetSpans();
+            let idToDelete = document.getElementById('category_to_delete').value;
+
+            tree.deleteIfPossible(idToDelete);
+            clearSelects();
+            fillSelects();
+            displayTree();
+
+        });
+
+
+        ///////////////////////end of events section
+
+
+        //function that updates selects every time when chosen option has changed
+        function updateSelect(branch) {
+
+            let data = tree.getCurrentNodes();
+            let filtered = data;
+            for (let i = 0; i < data.length; i++)
+                for (let twig of branch) {
+                    if (filtered[i].getID() == twig)
+                        filtered.splice(i, 1);
+                }
+
+            return filtered;
+        }
+
+        //function to add Node
+        function addNode() {
+            resetSpans();
+            let span = document.getElementById('added')
+            let parent = document.getElementById('parent_category').value;
+            let name = document.getElementById('node_to_add_name').value;
+            document.getElementById('node_to_add_name').value = "";
+            let result = tree.addNode(name, parent);
+            if (!result)
+                span.style.visibility = "visible";
+
+
+        }
+
+        //clears all selects
+        function clearSelects() {
+            $('select').empty();
+        }
+
+        //restart selects
+        function setSelects() {
+            $('select').find('option:eq(0)').prop('selected', true);
+        }
+
+
+        //function to fill selects with options
+        function fillSelects() {
+            let data = tree.getCurrentNodes();
+            let selects = [];
+
+            let directionSelect = document.getElementById('direction');
+
+
+            let addSelect = document.getElementById('parent_category');
+            selects.push(addSelect);
+
+            let deleteSelect = document.getElementById('category_to_delete');
+            selects.push(deleteSelect);
+
+            let moveSelect = document.getElementById('category_to_move');
+            selects.push(moveSelect);
+
+            let destinationSelect = document.getElementById('destination');
+            selects.push(destinationSelect);
+
+            let changeOrderSelect = document.getElementById('category_to_change_order');
+            selects.push(changeOrderSelect);
+
+            let optionMove = document.createElement('option');
+            let optionDestination = document.createElement('option');
+            let optionDestinationRoot = document.createElement('option');
+            let optionToChangeOrder = document.createElement('option');
+
+            let optionUp = document.createElement('option');
+            let optionDown = document.createElement('option');
+
+            optionUp.appendChild(document.createTextNode('up'));
+            optionUp.value = "up"
+            directionSelect.appendChild(optionUp);
+
+            optionDown.appendChild(document.createTextNode('Down'));
+            optionDown.value = "down"
+            directionSelect.appendChild(optionDown);
+
+            optionToChangeOrder.appendChild(document.createTextNode('what category should change order'));
+            optionToChangeOrder.value = -1;
+            changeOrderSelect.appendChild(optionToChangeOrder);
+
+
+            optionDestination.appendChild(document.createTextNode('where do you want to move chosen category'));
+            optionDestination.value = -1;
+            destinationSelect.appendChild(optionDestination);
+
+
+            optionDestinationRoot.appendChild(document.createTextNode('root'));
+            optionDestinationRoot.value = 0;
+            destinationSelect.appendChild(optionDestinationRoot);
+
+
+            optionMove.appendChild(document.createTextNode('choose category you want to move'));
+            optionMove.value = -1;
+            moveSelect.appendChild(optionMove);
+
+            let optionDelete = document.createElement('option');
+            optionDelete.appendChild(document.createTextNode('choose category to delete'));
+            optionDelete.value = -1;
+            deleteSelect.appendChild(optionDelete);
+
+            let option = document.createElement('option');
+            option.appendChild(document.createTextNode('No Parent'));
+            option.value = 0;
+            addSelect.appendChild(option);
+            for (let select of selects)
+                for (let node of data) {
+                    let option = document.createElement('option');
+                    option.appendChild(document.createTextNode(node.getName()));
+                    option.value = node.getID();
+                    select.appendChild(option);
+                }
+        }
+
+
+        //function that converts given that from displayTree function
+        function displayTree() {
+            let result = tree.display();
+            let resultJson = JSON.stringify(result);
+            fillTreeview(resultJson);
+        }
+
+        //function that moves category to other branch
+        function moveCategoryTo() {
+            resetSpans();
+            let idToMove = document.getElementById('category_to_move').value;
+            let destinationID = document.getElementById('destination').value;
+            tree.moveCategoryTo(idToMove, destinationID);
+
+            let span = document.getElementById('moved');
+            span.style.visibility = "visible";
+
+        }
+
+        //function that changes order
+        function changeOrderOfBranch() {
+            resetSpans();
+            let direction = document.getElementById('direction').value
+            direction === 'up' ? direction = true : direction = false;
+
+            let idToChangeOrder = document.getElementById('category_to_change_order').value;
+            if (!direction) {
+                let idToMoveDown = document.getElementById('to_which_category').value;
+                tree.changeOrder(idToChangeOrder, direction, idToMoveDown);
+            } else
+                tree.changeOrder(idToChangeOrder, direction);
+
+            let span = document.getElementById('changed_order');
+            span.style.visibility = "visible";
+
+        }
+
+        //function that fills tree container
+        function fillTreeview(data) {
+            $('#treeview').treeview({
+                data: data,
+                expandIcon: 'fa fa-plus-square-o',
+                collapseIcon: 'fa fa-minus-square-o',
+                checkedIcon: 'fa-check-square-o',
+                uncheckedIcon: 'fa fa-square-o',
+            });
+        }
+
+        function resetSpans() {
+            spans = document.getElementsByClassName('alert-success');
+            for (let span of spans)
+                if (span.style.visibility !== "hidden")
+                    span.style.visibility = "hidden";
+
+            let span = document.getElementById('added');
+            if (span.style.visibility != "hidden")
+                span.style.visibility = "hidden";
+        }
+
+    });
+</script>
